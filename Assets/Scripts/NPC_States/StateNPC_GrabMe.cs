@@ -26,15 +26,13 @@ public class StateNPC_GrabMe : State_NPC
     /// <returns></returns>
     public override bool UpdateState()
     {
-        Vector3 NPCToBrunie = m_brunie.m_torsoJoint.transform.position - m_NPC.transform.position;
-
-        if (NPCToBrunie.magnitude < m_brunie.m_grabDistance)
+        if (MOARMaths.CloseEnoughNoY(m_brunie.m_grabPoint.transform.position, m_NPC.transform.position, Entity.GRAB_DISTANCE))
         {
-            m_NPC.m_grabbing = true;
+            m_NPC.m_grabbedEnity = m_brunie;
             return true;
         }
 
-        m_NPC.MoveTowards(m_brunie.m_torsoJoint.transform.position, m_NPC.m_forwardSpeed);
+        m_NPC.MoveTowards(m_brunie.m_grabPoint.transform.position, m_NPC.m_forwardSpeed);
 
         return false;
     }
@@ -53,6 +51,6 @@ public class StateNPC_GrabMe : State_NPC
     /// </summary>
     public override bool IsValid()
     {
-        return !m_NPC.m_grabbing;
+        return m_NPC.m_grabbedEnity == null;
     }
 }

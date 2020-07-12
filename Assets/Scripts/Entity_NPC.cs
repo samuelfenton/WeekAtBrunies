@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class Entity_NPC : Entity
 {
-    public enum POSSIBLE_COMMANDS {IDLE, PICK_UP, DROP, FOOD, SLEEP, COUNT}
+    public enum POSSIBLE_COMMANDS {IDLE, PICK_UP, DROP, GO_TO_INTERACTABLE, GO_TO_POINT, COUNT}
 
     [HideInInspector]
-    public bool m_grabbing = false;
+    public Entity m_grabbedEnity = null;
 
     public GameObject m_model = null;
 
@@ -38,12 +38,18 @@ public class Entity_NPC : Entity
     private POSSIBLE_COMMANDS m_currentCommand = POSSIBLE_COMMANDS.IDLE;
 
     private Entity_Brunie m_brunie = null;
+    private Camera m_gameCamera = null;
+
+    //State machien stuff
+    [HideInInspector]
+    public Interactable m_targetInteractable = null;
+    public Vector3 m_targetPoint = Vector3.zero;
 
     public override void InitEntity(GameController p_gameController)
     {
         base.InitEntity(p_gameController);
 
-        m_brunie = FindObjectOfType<Entity_Brunie>();
+        m_brunie = m_gameController.m_brunie;
 
         m_legFrequency = 1 / m_legSwingTime;
 
@@ -52,6 +58,8 @@ public class Entity_NPC : Entity
 
         if (m_leftFoot != null)
             m_leftFootRB = m_leftFoot.GetComponent<Rigidbody>();
+
+        m_gameCamera = Camera.main;
 
         StateMachineInit();
     }
@@ -69,9 +77,16 @@ public class Entity_NPC : Entity
         m_rightFootRB.AddRelativeForce(forceDir, ForceMode.Acceleration);
         m_leftFootRB.AddRelativeForce(forceDir, ForceMode.Acceleration);
 
-        if(m_grabbing)
+        if (m_grabbedEnity != null)
         {
-            m_brunie.BeenGrabbed(m_rightArm.transform.position);
+            m_grabbedEnity.GrabbedEntity(m_rightArm.transform.position);
+        }
+
+        //Check for mouse clicks
+
+        if(Input.GetAxis("Fire1") > 0.0f)
+        {
+            GroundClickCheck();
         }
 
         StateMachineUpdate();
@@ -109,7 +124,34 @@ public class Entity_NPC : Entity
 
         forwardTurningModifier = Mathf.Clamp(forwardTurningModifier, 0.0f, 1.0f);
 
-        transform.Translate(transform.forward * p_speed * forwardTurningModifier * Time.deltaTime, Space.World);
+        m_movementRB.velocity = transform.forward * p_speed * forwardTurningModifier;
+    }
+
+    public void SetTargetInteractable(Interactable p_target)
+    {
+        if(p_target != null)
+        {
+            m_targetInteractable = p_target;
+            SwapStates(POSSIBLE_COMMANDS.GO_TO_INTERACTABLE);
+        }
+    }
+
+    private void GroundClickCheck()
+    {
+        RaycastHit hit;
+        Ray ray = m_gameCamera.ScreenPointToRay(Input.mousePosition);
+
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            if(hit.transform.gameObject.layer == CustomLayers.m_walkable)
+            {
+                m_targetPoint = hit.point;
+                m_targetPoint.y = 0.0f;
+
+                SwapStates(POSSIBLE_COMMANDS.GO_TO_POINT);
+            }
+        }
     }
 
     #region STATE MACHINE
@@ -123,8 +165,8 @@ public class Entity_NPC : Entity
         m_possibleStates[(int)POSSIBLE_COMMANDS.IDLE] = gameObject.AddComponent<StateNPC_Idle>();
         m_possibleStates[(int)POSSIBLE_COMMANDS.PICK_UP] = gameObject.AddComponent<StateNPC_GrabMe>();
         m_possibleStates[(int)POSSIBLE_COMMANDS.DROP] = gameObject.AddComponent<StateNPC_DropMe>();
-        m_possibleStates[(int)POSSIBLE_COMMANDS.FOOD] = gameObject.AddComponent<StateNPC_Food>();
-        m_possibleStates[(int)POSSIBLE_COMMANDS.SLEEP] = gameObject.AddComponent<StateNPC_Sleep>();
+        m_possibleStates[(int)POSSIBLE_COMMANDS.GO_TO_INTERACTABLE] = gameObject.AddComponent<StateNPC_GoToInteractable>();
+        m_possibleStates[(int)POSSIBLE_COMMANDS.GO_TO_POINT] = gameObject.AddComponent<StateNPC_GoToPoint>();
 
         //init
         for (int stateIndex = 0; stateIndex < m_possibleStates.Length; stateIndex++)

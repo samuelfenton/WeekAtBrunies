@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1924349579296577577}
   - component: {fileID: 485664512216523096}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Building_Floor_Wood
   m_TagString: Untagged
   m_Icon: {fileID: 0}

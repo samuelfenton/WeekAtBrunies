@@ -4,9 +4,15 @@ using UnityEngine;
 
 public class StateNPC_Idle : State_NPC
 {
+    private const float m_idleToDistance = 5.0f;
+    private float m_idleToMaxTime = 5.0f;
+    private float m_idleSpeedDivider = 2.0f;
+
     private GameController m_gameController = null;
 
     private Vector3 m_idleDestination = Vector3.zero;
+
+    private float m_timer = 0.0f;
 
     /// <summary>
     /// Init state, only happens once
@@ -15,6 +21,8 @@ public class StateNPC_Idle : State_NPC
     {
         base.InitState();
         m_gameController = FindObjectOfType<GameController>();
+
+        m_idleToMaxTime = m_idleToDistance / (m_NPC.m_forwardSpeed / m_idleSpeedDivider);
     }
 
     /// <summary>
@@ -24,9 +32,11 @@ public class StateNPC_Idle : State_NPC
     {
         base.InitState();
 
-        m_idleDestination.x = Random.Range(-m_gameController.m_arenaBounds.x, m_gameController.m_arenaBounds.x);
-        m_idleDestination.z = Random.Range(-m_gameController.m_arenaBounds.y, m_gameController.m_arenaBounds.y);
+        m_idleDestination.x = transform.position.x + Random.Range(-m_idleToDistance, m_idleToDistance);
+        m_idleDestination.z = transform.position.z + Random.Range(-m_idleToDistance, m_idleToDistance);
         m_idleDestination.y = 0.0f;
+
+        m_timer = m_idleToMaxTime;
     }
 
     /// <summary>
@@ -38,7 +48,9 @@ public class StateNPC_Idle : State_NPC
         Vector3 NPCToPoint = m_idleDestination - m_NPC.transform.position;
         NPCToPoint.y = 0.0f;
 
-        if (NPCToPoint.magnitude < m_brunie.m_grabDistance)
+        m_timer -= Time.deltaTime;
+
+        if (NPCToPoint.magnitude < Entity.GRAB_DISTANCE || m_timer < -0.0f)
         {
             return true;
         }

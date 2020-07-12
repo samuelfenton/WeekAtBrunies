@@ -4,14 +4,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
-{
-    public Vector2 m_arenaBounds = new Vector2(20.0f, 20.0f);
-    
+{    
     private UIController m_UIController = null;
     private Entity[] m_entities;
 
+    [HideInInspector]
+    public Entity_Brunie m_brunie = null;
+    [HideInInspector]
+    public Entity_NPC m_NPC = null;
+    [HideInInspector]
+    public CameraFollow m_cameraFollow = null;
+
     private void Start()
     {
+        m_brunie = FindObjectOfType<Entity_Brunie>();
+        m_NPC = FindObjectOfType<Entity_NPC>();
+
+        m_cameraFollow = FindObjectOfType<CameraFollow>();
+
         m_UIController = FindObjectOfType<UIController>();
         m_UIController.InitUI();
 
@@ -21,6 +31,8 @@ public class GameController : MonoBehaviour
         {
             m_entities[entityIndex].InitEntity(this);
         }
+
+        enabled = false;
     }
 
     private void Update()

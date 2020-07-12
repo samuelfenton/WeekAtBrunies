@@ -18,7 +18,7 @@ public class StateNPC_DropMe : State_NPC
     public override void StartState()
     {
         base.InitState();
-        m_NPC.m_grabbing = false;
+        m_NPC.m_grabbedEnity = null;
     }
 
     /// <summary>
@@ -44,6 +44,6 @@ public class StateNPC_DropMe : State_NPC
     /// </summary>
     public override bool IsValid()
     {
-        return m_NPC.m_grabbing;
+        return m_NPC.m_grabbedEnity != null; ;
     }
 }
